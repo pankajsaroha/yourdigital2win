@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-8">
                 {/* LEFT */}
-                <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+                <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6 flex justify-center items-center">
                     <DigitalTwinHuman
                         mood={averages?.mood}
                         sleep={averages?.sleep}
@@ -110,18 +110,24 @@ function SleepCard({ value }: { value: number }) {
 
 function WorkCard() {
     const bars = [4, 6, 5, 8, 7, 6, 8]
+
     return (
         <Card title="Work Hours">
-            <div className="flex items-end gap-2 h-[80px]">
-                {bars.map((v, i) => (
-                    <div
-                        key={i}
-                        className="w-3 rounded-md bg-gradient-to-t from-indigo-500 to-cyan-400"
-                        style={{ height: `${v * 10}px` }}
-                    />
-                ))}
+            <div className="flex flex-col justify-between h-[120px]">
+                <div className="flex items-end gap-2">
+                    {bars.map((v, i) => (
+                        <div
+                            key={i}
+                            className="w-3 rounded-md bg-gradient-to-t from-cyan-500 to-blue-400"
+                            style={{ height: `${v * 10}px` }}
+                        />
+                    ))}
+                </div>
+
+                <div className="text-sm text-white/60 mt-2">
+                    8 hrs/day
+                </div>
             </div>
-            <div className="text-sm text-white/60 mt-3">8 hrs/day</div>
         </Card>
     )
 }
@@ -178,9 +184,11 @@ function Card({
     children: React.ReactNode
 }) {
     return (
-        <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-5 h-[140px] flex flex-col justify-between">
+        <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-5 min-h-[160px] flex flex-col gap-3">
             <div className="text-sm text-white/60">{title}</div>
-            {children}
+            <div className="flex-1 flex flex-col justify-end">
+                {children}
+            </div>
         </div>
     )
 }

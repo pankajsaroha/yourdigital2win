@@ -3,7 +3,11 @@
 import { useState } from 'react'
 import { upsertDailyLog } from '@/app/actions/dailylog'
 
-export default function DailyLogClient() {
+export default function DailyLogClient({
+    selectedDate,
+}: {
+    selectedDate: Date
+}) {
     const [mood, setMood] = useState(3)
     const [sleepHours, setSleepHours] = useState('')
     const [workHours, setWorkHours] = useState('')
@@ -19,6 +23,7 @@ export default function DailyLogClient() {
         setMessage(null)
 
         const res = await upsertDailyLog({
+            date: selectedDate,
             mood,
             sleepHours: sleepHours ? parseFloat(sleepHours) : undefined,
             workHours: workHours ? parseFloat(workHours) : undefined,
@@ -46,8 +51,8 @@ export default function DailyLogClient() {
                             type="button"
                             onClick={() => setMood(v)}
                             className={`h-10 w-10 rounded-lg border ${mood === v
-                                    ? 'bg-sky-500 text-white border-sky-500'
-                                    : 'border-slate-300 text-slate-600'
+                                ? 'bg-sky-500 text-white border-sky-500'
+                                : 'border-slate-300 text-slate-600'
                                 }`}
                         >
                             {v}

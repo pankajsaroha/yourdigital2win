@@ -5,7 +5,9 @@ import { getSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
 export async function upsertDailyLog(data: {
+    date: Date
     mood?: number
+    energy?: number
     sleepHours?: number
     workHours?: number
     meetings?: number
@@ -18,18 +20,19 @@ export async function upsertDailyLog(data: {
             return { error: 'Unauthorized' }
         }
 
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
+        const logDate = new Date(data.date)
+        logDate.setHours(0, 0, 0, 0)
 
         const dailyLog = await db.dailyLog.upsert({
             where: {
                 userId_date: {
                     userId: session.userId,
-                    date: today,
+                    date: logDate,
                 },
             },
             update: {
                 mood: data.mood,
+                energy: data.energy ?? null,
                 sleepHours: data.sleepHours,
                 workHours: data.workHours,
                 meetings: data.meetings,
@@ -38,8 +41,9 @@ export async function upsertDailyLog(data: {
             },
             create: {
                 userId: session.userId,
-                date: today,
+                date: logDate,
                 mood: data.mood,
+                energy: data.energy ?? null,
                 sleepHours: data.sleepHours,
                 workHours: data.workHours,
                 meetings: data.meetings,
@@ -49,6 +53,8 @@ export async function upsertDailyLog(data: {
         })
 
         revalidatePath('/dashboard')
+        revalidatePath('/daily-log')
+
         return { success: true, dailyLog }
     } catch (error) {
         console.error('Upsert daily log error:', error)

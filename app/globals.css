@@ -2,46 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes breathe {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.4;
-  }
+/* ===============================
+   Theme Variables
+================================ */
 
-  50% {
-    transform: scale(1.2);
-    opacity: 0.7;
-  }
-
-  100% {
-    transform: scale(0.9);
-    opacity: 0.4;
-  }
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
-.animate-breathe {
-  animation: breathe 4s ease-in-out infinite;
+.dark {
+  --background: #050b14;
+  --foreground: #e5e7eb;
 }
 
-@keyframes pulse-soft {
-
-  0%,
-  100% {
-    opacity: 0.9;
-  }
-
-  50% {
-    opacity: 1;
-  }
+html,
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
-.animate-pulse-soft {
-  animation: pulse-soft 3s ease-in-out infinite;
-}
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ===============================
+   Animations
+================================ */
 
 @keyframes breathe {
 
@@ -69,12 +53,26 @@
   }
 }
 
-.animate-breathe {
-  animation: breathe 6s ease-in-out infinite;
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
-.animate-glow {
-  animation: glow 3.5s ease-in-out infinite;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInUp {
@@ -89,16 +87,34 @@
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
+.animate-breathe {
+  animation: breathe 6s ease-in-out infinite;
+}
 
-  to {
-    opacity: 1;
-  }
+.animate-glow {
+  animation: glow 3.5s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
 }
 
 .animate-fade {
   animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
 }

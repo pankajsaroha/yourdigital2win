@@ -66,6 +66,31 @@ export default function Sidebar() {
                     )
                 })}
             </nav>
+
+            {/* Theme Toggle */}
+            {/* <div className="mt-auto mb-4 flex flex-col items-center gap-1">
+                <button
+                    onClick={() => {
+                        const html = document.documentElement
+                        const isDark = html.classList.contains('dark')
+
+                        if (isDark) {
+                            html.classList.remove('dark')
+                            localStorage.setItem('theme', 'light')
+                        } else {
+                            html.classList.add('dark')
+                            localStorage.setItem('theme', 'dark')
+                        }
+                    }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 transition"
+                >
+                    🌗
+                </button>
+
+                <span className="text-[10px] text-white/40">
+                    Theme
+                </span>
+            </div> */}
         </aside>
     )
 }

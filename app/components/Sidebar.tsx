@@ -22,14 +22,14 @@ export default function Sidebar() {
     const pathname = usePathname()
 
     return (
-        <aside className="w-[220px] min-h-screen bg-gradient-to-b from-[#070f1a] to-[#050b14] border-r border-white/10 flex flex-col py-6 px-4">
+        <aside className="w-[96px] min-h-screen bg-gradient-to-b from-[#070f1a] to-[#050b14] border-r border-white/10 flex flex-col items-center py-6">
             {/* Logo */}
             <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.35)]">
                 <span className="text-lg font-bold">Y</span>
             </div>
 
             {/* Nav */}
-            <nav className="flex flex-col gap-3 mt-8 w-full">
+            <nav className="flex flex-col gap-6 mt-8 w-full items-center">
                 {items.map((item) => {
                     const active =
                         pathname === item.href ||
@@ -41,21 +41,27 @@ export default function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition
-                ${active
-                                    ? 'bg-cyan-500/15 text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.45)]'
-                                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                                }`}
+                            className="flex flex-col items-center gap-1 group"
                         >
-                            <Icon size={18} />
+                            <div
+                                className={`w-12 h-12 rounded-xl flex items-center justify-center transition
+                    ${active
+                                        ? 'bg-cyan-500/15 text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.45)]'
+                                        : 'text-white/50 group-hover:text-white group-hover:bg-white/5'
+                                    }`}
+                            >
+                                <Icon size={20} />
+                            </div>
 
-                            <span className="text-sm">
+                            <span
+                                className={`text-[11px] transition
+                    ${active
+                                        ? 'text-cyan-300'
+                                        : 'text-white/40 group-hover:text-white/70'
+                                    }`}
+                            >
                                 {item.label}
                             </span>
-
-                            {active && (
-                                <span className="absolute inset-0 rounded-xl ring-1 ring-cyan-400/40" />
-                            )}
                         </Link>
                     )
                 })}

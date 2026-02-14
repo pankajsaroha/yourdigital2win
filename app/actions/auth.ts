@@ -41,10 +41,10 @@ export async function sendOTP(email: string) {
         })
 
         // ✅ FORCE DEV LOG
-        // console.log('================ OTP =================')
-        // console.log(`EMAIL: ${email}`)
-        // console.log(`OTP  : ${code}`)
-        // console.log('=====================================')
+        console.log('================ OTP =================')
+        console.log(`EMAIL: ${email}`)
+        console.log(`OTP  : ${code}`)
+        console.log('=====================================')
 
         await resend.emails.send({
             from: 'YourDigital2Win <onboarding@resend.dev>',

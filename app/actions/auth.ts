@@ -3,6 +3,9 @@
 import { db } from '@/lib/db'
 import { createSession, deleteSession, generateOTP } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendOTP(email: string) {
     try {
@@ -38,10 +41,25 @@ export async function sendOTP(email: string) {
         })
 
         // ✅ FORCE DEV LOG
-        console.log('================ OTP =================')
-        console.log(`EMAIL: ${email}`)
-        console.log(`OTP  : ${code}`)
-        console.log('=====================================')
+        // console.log('================ OTP =================')
+        // console.log(`EMAIL: ${email}`)
+        // console.log(`OTP  : ${code}`)
+        // console.log('=====================================')
+
+        await resend.emails.send({
+            from: 'YourDigital2Win <onboarding@resend.dev>',
+            to: email,
+            replyTo: 'pankajsaroya6@gmail.com',
+            subject: 'Your OTP Code',
+            html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>YourDigital2Win Login</h2>
+            <p>Your verification code is:</p>
+            <h1 style="letter-spacing: 6px;">${code}</h1>
+            <p>This code expires in 10 minutes.</p>
+        </div>
+    `
+        })
 
         return { success: true }
     } catch (error) {

@@ -1,10 +1,17 @@
 import Sidebar from '@/app/components/Sidebar'
+import { getSession } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-export default function AppLayout({
+export default async function AppLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const session = await getSession()
+
+    if (!session) {
+        redirect('/')
+    }
     return (
         <div className="flex">
             {/* Sidebar */}

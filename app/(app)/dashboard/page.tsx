@@ -101,9 +101,20 @@ export default function DashboardPage() {
                         {/* IMPORTANT FIX — dedicated height wrapper */}
                         <div className="h-[280px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={trendData}>
-                                    <XAxis dataKey="day" stroke="#64748b" />
-                                    <YAxis stroke="#64748b" />
+                                <LineChart
+                                    data={trendData}
+                                    margin={{ top: 10, right: 20, left: 0, bottom: 20 }}   // 👈 added bottom space
+                                >
+                                    <XAxis
+                                        dataKey="day"
+                                        stroke="#64748b"
+                                        tick={{ fontSize: 12 }}
+                                        tickMargin={12}   // 👈 pushes labels down slightly
+                                    />
+                                    <YAxis
+                                        stroke="#64748b"
+                                        tick={{ fontSize: 12 }}
+                                    />
                                     <Tooltip contentStyle={tooltipStyle} />
 
                                     <Line

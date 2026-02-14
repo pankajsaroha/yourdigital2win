@@ -118,3 +118,29 @@ body {
 .animate-scaleIn {
   animation: scaleIn 0.2s ease-out;
 }
+
+/* Hide scrollbar but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth scroll feel */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bottom fade mask */
+.scroll-fade-mask {
+  mask-image: linear-gradient(to bottom,
+      black 85%,
+      transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom,
+      black 85%,
+      transparent 100%);
+}

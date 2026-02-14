@@ -8,7 +8,9 @@ import {
     Briefcase,
     Activity,
     Sparkles,
+    LogOut
 } from 'lucide-react'
+import { logout } from '../actions/auth'
 
 const items = [
     { label: 'Overview', href: '/dashboard', icon: LayoutGrid },
@@ -21,6 +23,10 @@ const items = [
 export default function Sidebar() {
     const pathname = usePathname()
 
+    const handleLogout = async () => {
+        await logout()
+        window.location.href = '/login'
+    }
     return (
         <aside className="w-[96px] min-h-screen bg-gradient-to-b from-[#070f1a] to-[#050b14] border-r border-white/10 flex flex-col items-center py-6">
             {/* Logo */}
@@ -91,6 +97,18 @@ export default function Sidebar() {
                     Theme
                 </span>
             </div> */}
+
+            <div className="mt-auto mb-6">
+                <button
+                    onClick={handleLogout}
+                    className="flex flex-col items-center text-white/50 hover:text-white transition"
+                >
+                    <LogOut size={20} />
+                    <span className="text-[10px] mt-1">
+                        Logout
+                    </span>
+                </button>
+            </div>
         </aside>
     )
 }

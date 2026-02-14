@@ -90,7 +90,7 @@ export default function DailyLogCalendarPage() {
     const [logs, setLogs] = useState<Log[]>([])
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
     const [form, setForm] = useState({
-        mood: 3,
+        mood: null as number | null,
         energy: null as number | null,   // NEW
         sleepHours: '',
         workHours: '',
@@ -214,7 +214,7 @@ export default function DailyLogCalendarPage() {
 
         await upsertDailyLog({
             date: selectedDate,
-            mood: form.mood,
+            mood: form.mood ?? undefined,
             energy: form.energy ?? undefined,
             sleepHours: Number(form.sleepHours),
             workHours: Number(form.workHours),
@@ -353,8 +353,8 @@ export default function DailyLogCalendarPage() {
 
             {/* Modal */}
             {selectedDate && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                    <div className="w-[360px] rounded-2xl bg-[#0b1a2a] border border-white/10 p-6">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto px-4">
+                    <div className="w-[360px] max-h-[90vh] overflow-y-auto no-scrollbar smooth-scroll scroll-fade-mask rounded-2xl bg-[#0b1a2a] border border-white/10 p-6">
                         <div className="text-lg font-medium mb-4">
                             {selectedDate.toDateString()}
                         </div>
@@ -364,7 +364,7 @@ export default function DailyLogCalendarPage() {
                             type="number"
                             min={1}
                             max={5}
-                            value={form.mood}
+                            value={form.mood ?? ''}
                             onChange={(e) =>
                                 setForm({ ...form, mood: Number(e.target.value) })
                             }

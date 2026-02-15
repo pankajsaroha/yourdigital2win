@@ -8,16 +8,23 @@ import {
     YAxis,
     Tooltip,
     ResponsiveContainer,
+    RadialBarChart,
+    RadialBar,
+    PolarAngleAxis,
+    AreaChart,
+    Area,
 } from 'recharts'
+
+
 import DigitalTwinHuman from '@/app/components/DigitalTwinHuman'
 import { getWeeklySummary } from '@/app/actions/analytics'
-import { getWeeklyBurnoutAssessment } from '@/app/actions/assessment' // ✅ NEW
+import { getWeeklyBurnoutAssessment } from '@/app/actions/assessment'
+import { detectFocusZone } from '@/app/lib/focus-zone'
 
 export default function DashboardPage() {
     const [logs, setLogs] = useState<any[]>([])
     const [averages, setAverages] = useState<any>(null)
 
-    // ✅ NEW — Burnout assessment state
     const [assessment, setAssessment] = useState<{
         state: 'balanced' | 'strained' | 'drifting' | 'at_risk'
         riskScore: number
@@ -28,51 +35,51 @@ export default function DashboardPage() {
     useEffect(() => {
         getWeeklySummary().then((res) => {
             if (res?.logs) {
-                setLogs(res.logs.reverse())
+                const ordered = res.logs.reverse()
+                setLogs(ordered)
                 setAverages(res.averages)
             }
         })
 
-        // ✅ NEW — load burnout assessment
         getWeeklyBurnoutAssessment().then((res) => {
             if (res) setAssessment(res)
         })
     }, [])
 
-    const trendData = logs.map((l) => ({
-        day: new Date(l.date).toLocaleDateString('en-US', { weekday: 'short' }),
-        sleep: l.sleepHours ?? 0,
-        activity: l.workHours ?? 0,
-    }))
+    const latestEnergyRaw =
+        logs.length > 0
+            ? logs[logs.length - 1].energy ?? 2.5
+            : 2.5
+
+    // Convert 0–5 → 0–100
+    const latestEnergy = (latestEnergyRaw / 5) * 100
+
+    const burnoutRaw = assessment?.riskScore ?? 0
+
+    // Convert 0–5 → 0–100
+    const burnoutRisk = (burnoutRaw / 5) * 100
+
+    const focusInsight = detectFocusZone(logs)
+
+    const trendData = buildWeeklyTrend(logs)
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#050b14] via-[#0b1a2a] to-[#050b14] px-8 py-8 text-white">
-            <h1 className="text-3xl font-semibold mb-8">My Digital Twin</h1>
+            <h1 className="text-3xl font-semibold mb-8">
+                Energy Intelligence System
+            </h1>
 
-            {/* ✅ NEW — Burnout Assessment Card */}
-            {assessment && (
-                <div className="mb-8 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="text-sm text-white/50">
-                            Your Twin’s Assessment
-                        </div>
-                        <StateBadge state={assessment.state} />
-                    </div>
+            {/* 🔥 ENERGY + BURNOUT SECTION */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <EnergyGauge rawValue={latestEnergyRaw} />
+                <BurnoutGauge
+                    rawValue={burnoutRaw}
+                    message={assessment?.message}
+                    drivers={assessment?.drivers ?? []}
+                />
+            </div>
 
-                    <div className="text-lg font-medium mb-2">
-                        {assessment.message}
-                    </div>
-
-                    {assessment.drivers.length > 0 && (
-                        <ul className="text-sm text-white/60 space-y-1 mt-3">
-                            {assessment.drivers.map((d, i) => (
-                                <li key={i}>• {d}</li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            )}
-
+            {/* MAIN GRID */}
             <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-8">
                 {/* LEFT */}
                 <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6 flex justify-center items-center">
@@ -85,56 +92,17 @@ export default function DashboardPage() {
 
                 {/* RIGHT */}
                 <div className="flex flex-col gap-8">
-                    {/* TOP CARDS (E2) */}
+                    <WeeklyPerformanceCard logs={logs} />
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <SleepCard value={averages?.sleep ?? 0} />
                         <WorkCard logs={logs} />
                         <GymCard logs={logs} />
                     </div>
 
-                    {/* BOTTOM CHART (E3) */}
-                    <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
-                        <div className="text-lg font-medium mb-4">
-                            Weekly Activity & Sleep Trend
-                        </div>
+                    <FocusZoneCard insight={focusInsight} />
 
-                        {/* IMPORTANT FIX — dedicated height wrapper */}
-                        <div className="h-[280px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart
-                                    data={trendData}
-                                    margin={{ top: 10, right: 20, left: 0, bottom: 20 }}   // 👈 added bottom space
-                                >
-                                    <XAxis
-                                        dataKey="day"
-                                        stroke="#64748b"
-                                        tick={{ fontSize: 12 }}
-                                        tickMargin={12}   // 👈 pushes labels down slightly
-                                    />
-                                    <YAxis
-                                        stroke="#64748b"
-                                        tick={{ fontSize: 12 }}
-                                    />
-                                    <Tooltip contentStyle={tooltipStyle} />
-
-                                    <Line
-                                        type="monotone"
-                                        dataKey="sleep"
-                                        stroke="#22d3ee"
-                                        strokeWidth={3}
-                                        dot={false}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="activity"
-                                        stroke="#818cf8"
-                                        strokeWidth={3}
-                                        dot={false}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
+                    <TrendChart data={trendData} />
                 </div>
             </div>
         </div>
@@ -366,4 +334,301 @@ const tooltipStyle = {
     border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: '8px',
     color: '#e5e7eb',
+}
+
+function EnergyGauge({
+    rawValue, // 0–5
+}: {
+    rawValue: number
+}) {
+    const percentage = Math.round((rawValue / 5) * 100)
+
+    const data = [{ name: 'energy', value: percentage }]
+
+    const color =
+        rawValue > 4
+            ? 'text-emerald-400'
+            : rawValue > 3
+                ? 'text-yellow-400'
+                : 'text-rose-400'
+
+    return (
+        <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+            <div className="flex justify-between items-center mb-4">
+                <div className="text-sm text-white/60">
+                    Energy Index
+                </div>
+                <InfoButton text="Energy Index is scored 0–5 based on sleep, workload, mood and recovery. The ring shows percentage equivalent." />
+            </div>
+
+            <div className="relative w-[220px] h-[220px] mx-auto flex items-center justify-center">
+                <RadialBarChart
+                    width={220}
+                    height={220}
+                    innerRadius="75%"
+                    outerRadius="100%"
+                    data={data}
+                    startAngle={90}
+                    endAngle={-270}
+                >
+                    <PolarAngleAxis
+                        type="number"
+                        domain={[0, 100]}
+                        tick={false}
+                    />
+                    <RadialBar
+                        dataKey="value"
+                        cornerRadius={12}
+                        fill="#22d3ee"
+                    />
+                </RadialBarChart>
+
+                {/* CENTER CONTENT */}
+                <div className="absolute flex flex-col items-center justify-center leading-tight">
+                    <div className={`text-4xl font-bold ${color}`}>
+                        {rawValue.toFixed(1)}
+                    </div>
+                    {/* <div className="text-xs text-white/50">
+                        / 5.0
+                    </div> */}
+                    <div className="text-xs text-white/40 mt-1">
+                        {percentage}%
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function BurnoutGauge({
+    rawValue, // 0–5 from assessment
+    message,
+    drivers,
+}: {
+    rawValue: number
+    message?: string
+    drivers?: string[]
+}) {
+    // Convert 0–5 → 0–100 for radial fill
+    const percentage = Math.round((rawValue / 5) * 100)
+
+    const color =
+        percentage < 30
+            ? '#10b981'
+            : percentage < 60
+                ? '#facc15'
+                : percentage < 80
+                    ? '#fb923c'
+                    : '#f43f5e'
+
+    const data = [{ name: 'risk', value: percentage }]
+
+    return (
+        <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-4">
+                <div className="text-sm text-white/60">
+                    Burnout Risk
+                </div>
+                <InfoButton text="Burnout score is based on weekly strain signals (sleep deficit, high workload, low energy patterns, meeting impact). It is scored 0–5 and converted to percentage for visualization." />
+            </div>
+
+            <div className="flex gap-6 items-center">
+                {/* GAUGE */}
+                <div className="relative w-[180px] h-[180px] flex items-center justify-center">
+                    <RadialBarChart
+                        width={180}
+                        height={180}
+                        innerRadius="75%"
+                        outerRadius="100%"
+                        data={data}
+                        startAngle={90}
+                        endAngle={-270}
+                    >
+                        <PolarAngleAxis
+                            type="number"
+                            domain={[0, 100]}
+                            tick={false}
+                        />
+                        <RadialBar
+                            dataKey="value"
+                            cornerRadius={12}
+                            fill={color}
+                        />
+                    </RadialBarChart>
+
+                    {/* CENTER CONTENT */}
+                    <div className="absolute flex flex-col items-center justify-center leading-tight">
+                        <div className="text-3xl font-bold">
+                            {rawValue.toFixed(1)}
+                        </div>
+                        <div className="text-xs text-white/50">
+                            / 5.0
+                        </div>
+                        <div className="text-xs text-white/40 mt-1">
+                            {percentage}%
+                        </div>
+                    </div>
+                </div>
+
+                {/* RIGHT SIDE TEXT */}
+                <div className="flex-1">
+                    {message && (
+                        <div className="text-sm text-white/80 mb-3">
+                            {message}
+                        </div>
+                    )}
+
+                    {drivers && drivers.length > 0 && (
+                        <ul className="text-xs text-white/60 space-y-1">
+                            {drivers.map((d, i) => (
+                                <li key={i}>• {d}</li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function WeeklyPerformanceCard({ logs }: any) {
+    if (!logs.length) return null
+
+    const avgEnergy =
+        logs.reduce((a: number, l: any) => a + (l.energy ?? 0), 0) /
+        logs.length
+
+    const highDays =
+        logs.filter((l: any) => (l.energy ?? 0) > 75).length
+
+    const overloadDays =
+        logs.filter((l: any) => (l.workHours ?? 0) > 9).length
+
+    return (
+        <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+            <div className="text-lg font-medium mb-4">
+                Weekly Cognitive Report
+            </div>
+
+            <div className="grid grid-cols-3 gap-6 text-center">
+                <Metric label="Avg Energy" value={avgEnergy.toFixed(0)} />
+                <Metric label="Focus Days" value={highDays} />
+                <Metric label="Overload Days" value={overloadDays} />
+            </div>
+        </div>
+    )
+}
+
+function Metric({ label, value }: any) {
+    return (
+        <div>
+            <div className="text-2xl font-semibold">{value}</div>
+            <div className="text-xs text-white/60">{label}</div>
+        </div>
+    )
+}
+
+function FocusZoneCard({ insight }: { insight: string }) {
+    return (
+        <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+            <div className="text-sm text-white/60 mb-2">
+                Focus Intelligence
+            </div>
+            <div className="text-white/90 text-sm">
+                {insight}
+            </div>
+        </div>
+    )
+}
+
+function TrendChart({ data }: any) {
+    return (
+        <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+            <div className="text-lg font-medium mb-4">
+                Weekly Energy Drivers
+            </div>
+
+            <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={data}>
+                        <XAxis dataKey="day" stroke="#64748b" />
+                        <YAxis stroke="#64748b" />
+                        <Tooltip />
+
+                        <Area
+                            type="monotone"
+                            dataKey="sleep"
+                            stroke="#22d3ee"
+                            fill="#22d3ee33"
+                            strokeWidth={3}
+                        />
+
+                        <Area
+                            type="monotone"
+                            dataKey="activity"
+                            stroke="#818cf8"
+                            fill="#818cf833"
+                            strokeWidth={3}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+    )
+}
+
+function buildWeeklyTrend(logs: any[]) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const day = today.getDay()
+    const diffToMonday = day === 0 ? -6 : 1 - day
+    const monday = new Date(today)
+    monday.setDate(today.getDate() + diffToMonday)
+
+    const weekDays: Date[] = []
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(monday)
+        d.setDate(monday.getDate() + i)
+        weekDays.push(d)
+    }
+
+    const logMap = new Map(
+        logs.map((l) => [
+            new Date(l.date).toDateString(),
+            l,
+        ])
+    )
+
+    return weekDays.map((d) => {
+        const log = logMap.get(d.toDateString())
+
+        return {
+            day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+            sleep: log?.sleepHours ?? 0,
+            activity: log?.workHours ?? 0,
+        }
+    })
+}
+
+function InfoButton({ text }: { text: string }) {
+    const [show, setShow] = useState(false)
+
+    return (
+        <div className="relative z-50">
+            <button
+                onClick={() => setShow(!show)}
+                className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-sm"
+            >
+                i
+            </button>
+
+            {show && (
+                <div className="absolute right-0 top-8 w-72 bg-[#0f172a] border border-white/10 p-4 rounded-xl text-sm text-white shadow-2xl z-50">
+                    {text}
+                </div>
+            )}
+        </div>
+    )
 }

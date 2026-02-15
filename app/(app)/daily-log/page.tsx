@@ -89,14 +89,22 @@ function InsightsPanel({
 export default function DailyLogCalendarPage() {
     const [logs, setLogs] = useState<Log[]>([])
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-    const [form, setForm] = useState({
-        mood: null as number | null,
-        energy: null as number | null,   // NEW
-        sleepHours: '',
-        workHours: '',
-        meetings: '',                    // NEW
-        gym: false,                      // NEW
-        notes: '',                       // NEW
+    const [form, setForm] = useState<{
+        mood: number | null
+        energy: number | null
+        sleepHours: number
+        workHours: number
+        meetings: number
+        gym: boolean
+        notes: string
+    }>({
+        mood: null,
+        energy: null,
+        sleepHours: 0,
+        workHours: 0,
+        meetings: 0,
+        gym: false,
+        notes: '',
     })
 
     const [cursor, setCursor] = useState(() => {
@@ -199,11 +207,11 @@ export default function DailyLogCalendarPage() {
 
         setSelectedDate(d)
         setForm({
-            mood: log?.mood ?? 3,
+            mood: log?.mood ?? null,
             energy: log?.energy ?? null,
-            sleepHours: log?.sleepHours?.toString() ?? '',
-            workHours: log?.workHours?.toString() ?? '',
-            meetings: log?.meetings?.toString() ?? '',
+            sleepHours: log?.sleepHours ?? 0,
+            workHours: log?.workHours ?? 0,
+            meetings: log?.meetings ?? 0,
             gym: log?.gym ?? false,
             notes: log?.notes ?? '',
         })
@@ -354,86 +362,156 @@ export default function DailyLogCalendarPage() {
             {/* Modal */}
             {selectedDate && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto px-4">
-                    <div className="w-[360px] max-h-[90vh] overflow-y-auto no-scrollbar smooth-scroll scroll-fade-mask rounded-2xl bg-[#0b1a2a] border border-white/10 p-6">
-                        <div className="text-lg font-medium mb-4">
+                    <div className="w-[380px] max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl bg-[#0b1a2a] border border-white/10 p-6">
+
+                        <div className="text-lg font-medium mb-6">
                             {selectedDate.toDateString()}
                         </div>
 
-                        <label className="block text-sm mb-1">Mood (1–5)</label>
-                        <input
-                            type="number"
-                            min={1}
-                            max={5}
-                            value={form.mood ?? ''}
-                            onChange={(e) =>
-                                setForm({ ...form, mood: Number(e.target.value) })
-                            }
-                            className="w-full mb-3 bg-black/40 border border-white/10 rounded-lg px-3 py-2"
-                        />
+                        {/* ---------------- MOOD ---------------- */}
+                        <div className="mb-6">
+                            <div className="text-sm text-white/60 mb-2">Mood</div>
+                            <div className="flex justify-between">
+                                {['😩', '😕', '😐', '🙂', '😄'].map((emoji, i) => {
+                                    const value = i + 1
+                                    return (
+                                        <button
+                                            key={value}
+                                            onClick={() => setForm({ ...form, mood: value })}
+                                            className={`w-12 h-12 text-2xl rounded-full transition-all ${form.mood === value
+                                                ? 'bg-white/20 scale-110'
+                                                : 'bg-white/5 hover:bg-white/10'
+                                                }`}
+                                        >
+                                            {emoji}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
 
-                        <label className="block text-sm mb-1">Energy (1–5)</label>
-                        <input
-                            type="number"
-                            min={1}
-                            max={5}
-                            value={form.energy ?? ''}
-                            onChange={(e) =>
-                                setForm({
-                                    ...form,
-                                    energy: e.target.value ? Number(e.target.value) : null,
-                                })
-                            }
-                            className="w-full mb-3 bg-black/40 border border-white/10 rounded-lg px-3 py-2"
-                        />
+                        {/* ---------------- ENERGY ---------------- */}
+                        <div className="mb-6">
+                            <div className="text-sm text-white/60 mb-2">Energy</div>
+                            <div className="flex justify-between">
+                                {['🔋', '🔋', '🔋', '🔋', '🔋'].map((icon, i) => {
+                                    const value = i + 1
+                                    return (
+                                        <button
+                                            key={value}
+                                            onClick={() => setForm({ ...form, energy: value })}
+                                            className={`w-12 h-12 text-xl rounded-full transition-all ${form.energy === value
+                                                ? 'bg-cyan-500/30 scale-110'
+                                                : 'bg-white/5 hover:bg-white/10'
+                                                }`}
+                                        >
+                                            {value}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
 
-                        <label className="block text-sm mb-1">Sleep hours</label>
-                        <input
-                            value={form.sleepHours}
-                            onChange={(e) =>
-                                setForm({ ...form, sleepHours: e.target.value })
-                            }
-                            className="w-full mb-3 bg-black/40 border border-white/10 rounded-lg px-3 py-2"
-                        />
+                        {/* ---------------- SLEEP ---------------- */}
+                        <div className="mb-6">
+                            <div className="flex justify-between text-sm text-white/60 mb-2">
+                                <span>Sleep</span>
+                                <span>{form.sleepHours ?? 0} hrs</span>
+                            </div>
 
-                        <label className="block text-sm mb-1">Work hours</label>
-                        <input
-                            value={form.workHours}
-                            onChange={(e) =>
-                                setForm({ ...form, workHours: e.target.value })
-                            }
-                            className="w-full mb-3 bg-black/40 border border-white/10 rounded-lg px-3 py-2"
-                        />
-
-                        <label className="block text-sm mb-1">Meetings</label>
-                        <input
-                            value={form.meetings}
-                            onChange={(e) =>
-                                setForm({ ...form, meetings: e.target.value })
-                            }
-                            className="w-full mb-3 bg-black/40 border border-white/10 rounded-lg px-3 py-2"
-                        />
-
-                        <label className="flex items-center gap-2 text-sm mb-3">
                             <input
-                                type="checkbox"
-                                checked={form.gym}
+                                type="range"
+                                min="0"
+                                max="12"
+                                step="0.5"
+                                value={form.sleepHours ?? 0}
                                 onChange={(e) =>
-                                    setForm({ ...form, gym: e.target.checked })
+                                    setForm({
+                                        ...form,
+                                        sleepHours: Number(e.target.value),
+                                        workHours:
+                                            form.workHours > 24 - Number(e.target.value)
+                                                ? 24 - Number(e.target.value)
+                                                : form.workHours,
+                                    })
                                 }
+                                className="w-full accent-cyan-500"
                             />
-                            Went to gym
-                        </label>
+                        </div>
 
-                        <label className="block text-sm mb-1">Notes</label>
-                        <textarea
-                            value={form.notes}
-                            onChange={(e) =>
-                                setForm({ ...form, notes: e.target.value })
-                            }
-                            rows={3}
-                            className="w-full mb-4 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm"
-                        />
+                        {/* ---------------- WORK ---------------- */}
+                        <div className="mb-6">
+                            <div className="flex justify-between text-sm text-white/60 mb-2">
+                                <span>Work</span>
+                                <span>{form.workHours ?? 0} hrs</span>
+                            </div>
 
+                            <input
+                                type="range"
+                                min="0"
+                                max={24 - (form.sleepHours ?? 0)}
+                                step="0.5"
+                                value={form.workHours ?? 0}
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        workHours: Number(e.target.value),
+                                    })
+                                }
+                                className="w-full accent-indigo-500"
+                            />
+                        </div>
+
+                        {/* ---------------- MEETINGS ---------------- */}
+                        <div className="mb-6">
+                            <div className="text-sm text-white/60 mb-2">Meetings</div>
+                            <div className="flex gap-2">
+                                {[0, 1, 2, 3, 4, 5].map((m) => (
+                                    <button
+                                        key={m}
+                                        onClick={() =>
+                                            setForm({ ...form, meetings: m })
+                                        }
+                                        className={`px-3 py-2 rounded-lg text-sm transition ${form.meetings === m
+                                            ? 'bg-indigo-500/30'
+                                            : 'bg-white/5 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {m === 5 ? '5+' : m}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* ---------------- GYM ---------------- */}
+                        <div className="mb-6">
+                            <button
+                                onClick={() =>
+                                    setForm({ ...form, gym: !form.gym })
+                                }
+                                className={`w-full py-3 rounded-lg transition ${form.gym
+                                    ? 'bg-emerald-500/30'
+                                    : 'bg-white/5 hover:bg-white/10'
+                                    }`}
+                            >
+                                {form.gym ? '🏋️ Gym Completed' : '🏋️ Went to Gym?'}
+                            </button>
+                        </div>
+
+                        {/* ---------------- NOTES (OPTIONAL) ---------------- */}
+                        <div className="mb-6">
+                            <textarea
+                                placeholder="Optional notes..."
+                                value={form.notes ?? ''}
+                                onChange={(e) =>
+                                    setForm({ ...form, notes: e.target.value })
+                                }
+                                rows={2}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm"
+                            />
+                        </div>
+
+                        {/* ACTIONS */}
                         <div className="flex justify-end gap-2">
                             <button
                                 onClick={() => setSelectedDate(null)}
@@ -441,6 +519,7 @@ export default function DailyLogCalendarPage() {
                             >
                                 Cancel
                             </button>
+
                             <button
                                 onClick={save}
                                 className="px-4 py-2 rounded-lg bg-cyan-500 text-black text-sm font-medium"

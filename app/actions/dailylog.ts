@@ -21,7 +21,6 @@ export async function upsertDailyLog(data: {
         }
 
         const logDate = new Date(data.date)
-        logDate.setHours(0, 0, 0, 0)
 
         const dailyLog = await db.dailyLog.upsert({
             where: {

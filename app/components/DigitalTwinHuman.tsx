@@ -12,24 +12,13 @@ export default function DigitalTwinHuman({
     work = 8,
 }: Props) {
     return (
-        <div className="flex justify-center items-center h-full">
-            {/* Stable container */}
-            <div className="relative w-[320px] h-[640px]">
+        <div className="flex justify-center items-center">
+            <div className="w-[280px] h-[480px]">
                 <img
                     src="/human-silhouette.png"
                     alt="Digital Twin"
                     className="absolute inset-0 w-full h-full object-contain opacity-95"
                 />
-
-                {/*
-                  🔒 Metric glow points are intentionally disabled.
-                  Reason:
-                  - Absolute positioning drift
-                  - Non-critical to core product
-                  - Will revisit post MVP
-
-                  <Glow ... />
-                */}
             </div>
         </div>
     )

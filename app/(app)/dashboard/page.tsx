@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     LineChart,
     Line,
@@ -59,17 +59,42 @@ export default function DashboardPage() {
     // Convert 0–5 → 0–100
     const burnoutRisk = (burnoutRaw / 5) * 100
 
+    const burnoutPercent = (burnoutRaw / 5) * 100
+
+    const last3 = logs.slice(-3)
+
+    const avgEnergy =
+        last3.reduce((a, l) => a + (l.energy ?? 3), 0) /
+        (last3.length || 1)
+
+    const avgSleep =
+        last3.reduce((a, l) => a + (l.sleepHours ?? 7), 0) /
+        (last3.length || 1)
+
+    // Readiness formula (0–100)
+    const readiness =
+        Math.round(
+            ((avgSleep / 8) * 0.4 +
+                (avgEnergy / 5) * 0.3 +
+                (1 - burnoutPercent / 100) * 0.3) * 100
+        )
+
     const focusInsight = detectFocusZone(logs)
 
     const trendData = buildWeeklyTrend(logs)
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#050b14] via-[#0b1a2a] to-[#050b14] px-8 py-8 text-white">
-            <h1 className="text-3xl font-semibold mb-8">
-                Energy Intelligence System
-            </h1>
 
-            {/* 🔥 ENERGY + BURNOUT SECTION */}
+            {/* HEADER */}
+            <h1 className="text-3xl font-semibold mb-1">
+                Your Digital Twin
+            </h1>
+            <div className="text-sm text-white/50 mb-8">
+                Personal Performance Intelligence System
+            </div>
+
+            {/* 🔥 ENERGY + BURNOUT */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <EnergyGauge rawValue={latestEnergyRaw} />
                 <BurnoutGauge
@@ -79,10 +104,26 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* MAIN GRID */}
-            <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-8">
-                {/* LEFT */}
-                <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6 flex justify-center items-center">
+            {/* 🔥 WEEKLY PERFORMANCE FULL WIDTH */}
+            <div className="mb-8">
+                <WeeklyPerformanceCard logs={logs} />
+            </div>
+
+
+            {/* Sleep / Work / Gym */}
+            <div className="mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <SleepCard value={averages?.sleep ?? 0} />
+                    <WorkCard logs={logs} />
+                    <GymCard logs={logs} />
+                </div>
+            </div>
+
+            {/* 🔥 MAIN DASHBOARD */}
+            <div className="grid grid-cols-2 xl:grid-cols-3 gap-8 mb-10">
+
+                {/* COLUMN 1 — Digital Twin */}
+                <div className="xl:col-span-1 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6 flex justify-center items-center">
                     <DigitalTwinHuman
                         mood={averages?.mood}
                         sleep={averages?.sleep}
@@ -90,20 +131,17 @@ export default function DashboardPage() {
                     />
                 </div>
 
-                {/* RIGHT */}
-                <div className="flex flex-col gap-8">
-                    <WeeklyPerformanceCard logs={logs} />
+                {/* COLUMN 2 + 3 — Analytics */}
+                <div className="xl:col-span-2 flex flex-col gap-8">
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <SleepCard value={averages?.sleep ?? 0} />
-                        <WorkCard logs={logs} />
-                        <GymCard logs={logs} />
-                    </div>
-
+                    {/* Focus Zone */}
                     <FocusZoneCard insight={focusInsight} />
 
+                    {/* Trend Chart */}
                     <TrendChart data={trendData} />
+
                 </div>
+
             </div>
         </div>
     )
@@ -157,7 +195,7 @@ function SleepCard({ value }: { value: number }) {
     return (
         <Card title="Avg Sleep">
             <div className="text-2xl font-semibold mb-3">
-                {value} <span className="text-sm text-white/60">hrs/night</span>
+                {value.toFixed(2)} <span className="text-sm text-white/60">hrs/night</span>
             </div>
             <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                 <div
@@ -400,6 +438,78 @@ function EnergyGauge({
     )
 }
 
+function ReadinessGauge({
+    value, // 0–100
+}: {
+    value: number
+}) {
+    const data = [{ name: 'readiness', value }]
+    const percentage = Math.max(0, Math.min(100, value))
+
+    // const color =
+    //     value > 80
+    //         ? 'text-emerald-400'
+    //         : value > 60
+    //             ? 'text-yellow-400'
+    //             : 'text-rose-400'
+
+    const color =
+        value >= 80
+            ? '#14b8a6'   // Soft Teal (high capacity)
+            : value >= 60
+                ? '#22d3ee'   // Muted Cyan (stable)
+                : value >= 40
+                    ? '#6366f1'   // Soft Indigo (moderate)
+                    : '#64748b'   // Calm Slate (low)
+
+    return (
+        <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+            <div className="flex justify-between items-center mb-4">
+                <div className="text-sm text-white/60">
+                    Today’s Readiness
+                </div>
+                <InfoButton text="Today’s Readiness estimates your cognitive capacity based on recent sleep, energy trend and burnout risk." />
+            </div>
+
+            <div className="relative w-[220px] h-[220px] mx-auto flex items-center justify-center">
+                <RadialBarChart
+                    width={220}
+                    height={220}
+                    innerRadius="75%"
+                    outerRadius="100%"
+                    data={[{ value: percentage }]}
+                    startAngle={90}
+                    endAngle={-270}
+                >
+                    <PolarAngleAxis
+                        type="number"
+                        domain={[0, 100]}
+                        tick={false}
+                    />
+
+                    <RadialBar
+                        dataKey="value"
+                        cornerRadius={12}
+                        fill="#22d3ee" // blue
+                        background={{
+                            fill: "rgba(255,255,255,0.08)", // grey remainder
+                        }}
+                    />
+                </RadialBarChart>
+
+                <div className="absolute flex flex-col items-center justify-center leading-tight">
+                    <div className={`text-4xl font-bold ${color}`}>
+                        {value}%
+                    </div>
+                    {/* <div className="text-xs text-white/40 mt-1">
+                        %
+                    </div> */}
+                </div>
+            </div>
+        </div>
+    )
+}
+
 function BurnoutGauge({
     rawValue, // 0–5 from assessment
     message,
@@ -412,16 +522,35 @@ function BurnoutGauge({
     // Convert 0–5 → 0–100 for radial fill
     const percentage = Math.round((rawValue / 5) * 100)
 
-    const color =
-        percentage < 30
-            ? '#10b981'
-            : percentage < 60
-                ? '#facc15'
-                : percentage < 80
-                    ? '#fb923c'
-                    : '#f43f5e'
+    // const color =
+    //     percentage < 30
+    //         ? '#10b981'
+    //         : percentage < 60
+    //             ? '#facc15'
+    //             : percentage < 80
+    //                 ? '#fb923c'
+    //                 : '#f43f5e'
 
-    const data = [{ name: 'risk', value: percentage }]
+    const color =
+        rawValue === 0
+            ? 'transparent'      // no strain
+            : rawValue <= 2
+                ? '#eab308'          // Soft Amber (mild strain)
+                : rawValue === 3
+                    ? '#f97316'          // Muted Orange (moderate)
+                    : '#e11d48'          // Soft Rose (elevated)
+
+    const data =
+        percentage > 0
+            ? [{ name: 'risk', value: percentage }]
+            : [{ name: 'risk', value: 0 }]
+
+    const chartData = [
+        {
+            background: 100,
+            risk: percentage,
+        },
+    ]
 
     return (
         <div className="rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
@@ -437,11 +566,11 @@ function BurnoutGauge({
                 {/* GAUGE */}
                 <div className="relative w-[180px] h-[180px] flex items-center justify-center">
                     <RadialBarChart
-                        width={180}
-                        height={180}
+                        width={220}
+                        height={220}
                         innerRadius="75%"
                         outerRadius="100%"
-                        data={data}
+                        data={[{ value: percentage }]}
                         startAngle={90}
                         endAngle={-270}
                     >
@@ -450,10 +579,14 @@ function BurnoutGauge({
                             domain={[0, 100]}
                             tick={false}
                         />
+
                         <RadialBar
                             dataKey="value"
                             cornerRadius={12}
-                            fill={color}
+                            fill={percentage > 0 ? color : 'transparent'}
+                            background={{
+                                fill: "rgba(255,255,255,0.08)",
+                            }}
                         />
                     </RadialBarChart>
 
@@ -614,9 +747,22 @@ function buildWeeklyTrend(logs: any[]) {
 
 function InfoButton({ text }: { text: string }) {
     const [show, setShow] = useState(false)
+    const ref = React.useRef<HTMLDivElement>(null)
+
+    React.useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (ref.current && !ref.current.contains(event.target as Node)) {
+                setShow(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () =>
+            document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
     return (
-        <div className="relative z-50">
+        <div ref={ref} className="relative z-50">
             <button
                 onClick={() => setShow(!show)}
                 className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-sm"
@@ -625,7 +771,7 @@ function InfoButton({ text }: { text: string }) {
             </button>
 
             {show && (
-                <div className="absolute right-0 top-8 w-72 bg-[#0f172a] border border-white/10 p-4 rounded-xl text-sm text-white shadow-2xl z-50">
+                <div className="absolute right-0 top-8 w-72 bg-[#0f172a] border border-white/10 p-4 rounded-xl text-sm text-white shadow-2xl">
                     {text}
                 </div>
             )}

@@ -30,9 +30,11 @@ export default function Sidebar() {
     return (
         <aside className="w-[96px] min-h-screen bg-gradient-to-b from-[#070f1a] to-[#050b14] border-r border-white/10 flex flex-col items-center py-6">
             {/* Logo */}
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.35)]">
-                <span className="text-lg font-bold">Y</span>
-            </div>
+            <Link href="/dashboard">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.35)]">
+                    <span className="text-lg font-bold">Y</span>
+                </div>
+            </Link>
 
             {/* Nav */}
             <nav className="flex flex-col gap-6 mt-8 w-full items-center">

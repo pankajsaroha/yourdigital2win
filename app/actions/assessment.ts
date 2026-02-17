@@ -137,7 +137,8 @@ export async function getWeeklyBurnoutAssessment(): Promise<BurnoutAssessment | 
     ============================================================ */
 
     let state: BurnoutState = 'balanced'
-    let message = 'You are operating within your stable range.'
+    // let message = 'You are operating within your stable range.'
+    let message = 'No strain signals detected this week.'
 
     if (riskScore >= 4) {
         state = 'at_risk'

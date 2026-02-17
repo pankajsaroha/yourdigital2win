@@ -220,8 +220,11 @@ export default function DailyLogCalendarPage() {
     const save = async () => {
         if (!selectedDate) return
 
+        const utcDate = new Date(selectedDate);
+        utcDate.setUTCHours(0, 0, 0, 0);
+
         await upsertDailyLog({
-            date: selectedDate,
+            date: utcDate,
             mood: form.mood ?? undefined,
             energy: form.energy ?? undefined,
             sleepHours: Number(form.sleepHours),
